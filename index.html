@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数对表示位置 - 五子棋游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .game-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .board-container {
+            position: relative;
+            background-color: #e8ba78;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .board {
+            position: relative;
+            width: 360px;
+            height: 361px;
+            border: 2px solid #8b4513;
+        }
+        
+        .grid-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .intersection {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 1;
+        }
+        
+        .intersection:hover {
+            background-color: rgba(139, 69, 19, 0.3);
+            border-radius: 50%;
+        }
+        
+        .intersection.has-piece {
+            cursor: default;
+        }
+        
+        .intersection.has-piece:hover {
+            background-color: transparent;
+        }
+        
+        .piece {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 2;
+        }
+        
+        .piece.black {
+            background-color: #000;
+        }
+        
+        .piece.white {
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+        
+        .coordinates-x {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 0;
+        }
+        
+        .coordinates-y {
+            position: absolute;
+            left: -25px;
+            top: 0;
+            height: 361px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        .coordinates-y .coord:first-child {
+            margin-top: 0;
+        }
+        
+        .coordinates-y .coord:last-child {
+            margin-bottom: 0;
+        }
+        
+        .coord {
+            font-size: 14px;
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .player-control {
+            background-color: #f9f9f9;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .player-control.active {
+            border-color: #4CAF50;
+            background-color: #f1f8e9;
+        }
+        
+        .player-control h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .piece-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .input-group input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        
+        .restart-btn {
+            display: block;
+            margin: 20px auto;
+            background-color: #ff9800;
+        }
+        
+        .restart-btn:hover {
+            background-color: #e68900;
+        }
+        
+        .instructions {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            color: #856404;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>数对表示位置 - 五子棋游戏</h1>
+        
+        <div class="game-wrapper">
+            <div class="board-container">
+                <div class="coordinates-x">
+                    <div class="coord">0</div>
+                    <div class="coord">1</div>
+                    <div class="coord">2</div>
+                    <div class="coord">3</div>
+                    <div class="coord">4</div>
+                    <div class="coord">5</div>
+                    <div class="coord">6</div>
+                    <div class="coord">7</div>
+                    <div class="coord">8</div>
+                    <div class="coord">9</div>
+                </div>
+                
+                <div class="coordinates-y">
+                    <div class="coord">0</div>
+                    <div class="coord">1</div>
+                    <div class="coord">2</div>
+                    <div class="coord">3</div>
+                    <div class="coord">4</div>
+                    <div class="coord">5</div>
+                    <div class="coord">6</div>
+                    <div class="coord">7</div>
+                    <div class="coord">8</div>
+                    <div class="coord">9</div>
+                </div>
+                
+                <div id="board" class="board">
+                    <div class="grid-lines"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div id="player1" class="player-control active">
+                <h3>学生1</h3>
+                <div class="piece-color black"></div>
+                <div class="input-group">
+                    <label for="x1">横坐标 (x):</label>
+                    <input type="number" id="x1" min="0" max="9" value="0">
+                </div>
+                <div class="input-group">
+                    <label for="y1">纵坐标 (y):</label>
+                    <input type="number" id="y1" min="0" max="9" value="0">
+                </div>
+                <button id="submit1" onclick="submitMove(1)">下黑棋</button>
+            </div>
+            
+            <div id="player2" class="player-control">
+                <h3>学生2</h3>
+                <div class="piece-color white"></div>
+                <div class="input-group">
+                    <label for="x2">横坐标 (x):</label>
+                    <input type="number" id="x2" min="0" max="9" value="0" disabled>
+                </div>
+                <div class="input-group">
+                    <label for="y2">纵坐标 (y):</label>
+                    <input type="number" id="y2" min="0" max="9" value="0" disabled>
+                </div>
+                <button id="submit2" onclick="submitMove(2)" disabled>下白棋</button>
+            </div>
+        </div>
+        
+        <div id="message" class="message">学生1（黑棋）请下棋</div>
+        <button id="restart" class="restart-btn" onclick="restartGame()">重新开始</button>
+        
+        <div class="instructions">
+            <h3>游戏说明</h3>
+            <ul>
+                <li>使用数对(x,y)表示棋子的位置，其中x是横坐标（从左到右0-9），y是纵坐标（从下到上0-9）</li>
+                <li>学生1使用黑棋，学生2使用白棋，轮流下棋</li>
+                <li>在操作区输入想要下棋的位置坐标，点击按钮提交</li>
+                <li>先在一条直线（横、竖、斜）上连成5颗棋子的一方获胜</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const BOARD_SIZE = 10;
+        let currentPlayer = 1; // 1表示黑棋，2表示白棋
+        let board = [];
+        let gameOver = false;
+        
+        // 初始化棋盘
+        function initBoard() {
+            const boardElement = document.getElementById('board');
+            const gridLinesElement = boardElement.querySelector('.grid-lines');
+            
+            // 清空棋盘
+            while (boardElement.children.length > 1) { // 保留.grid-lines元素
+                boardElement.removeChild(boardElement.lastChild);
+            }
+            
+            // 绘制网格线
+            gridLinesElement.innerHTML = '';
+            
+            // 绘制垂直线
+            for (let x = 0; x < BOARD_SIZE; x++) {
+                const line = document.createElement('div');
+                line.style.position = 'absolute';
+                line.style.left = (x * 40) + 'px';
+                line.style.top = '0';
+                line.style.width = '1px';
+                line.style.height = '100%';
+                line.style.backgroundColor = '#8b4513';
+                gridLinesElement.appendChild(line);
+            }
+            
+            // 绘制水平线
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                const line = document.createElement('div');
+                line.style.position = 'absolute';
+                line.style.top = (y * 40) + 'px';
+                line.style.left = '0';
+                line.style.width = '100%';
+                line.style.height = '1px';
+                line.style.backgroundColor = '#8b4513';
+                gridLinesElement.appendChild(line);
+            }
+            
+            // 初始化棋盘数组
+            board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+            
+            // 创建交点
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                for (let x = 0; x < BOARD_SIZE; x++) {
+                    const intersection = document.createElement('div');
+                    intersection.className = 'intersection';
+                    intersection.dataset.x = x;
+                    intersection.dataset.y = 9 - y; // 因为坐标显示是从下到上0-9，但数组索引是从上到下0-9
+                    intersection.style.left = (x * 40) + 'px';
+                    intersection.style.top = (y * 40) + 'px';
+                    
+                    intersection.onclick = function() {
+                        if (!gameOver && currentPlayer === 1) {
+                            document.getElementById('x1').value = x;
+                            document.getElementById('y1').value = 9 - y;
+                        } else if (!gameOver && currentPlayer === 2) {
+                            document.getElementById('x2').value = x;
+                            document.getElementById('y2').value = 9 - y;
+                        }
+                    };
+                    
+                    boardElement.appendChild(intersection);
+                }
+            }
+        }
+        
+        // 切换当前玩家
+        function switchPlayer() {
+            if (currentPlayer === 1) {
+                currentPlayer = 2;
+                document.getElementById('player1').classList.remove('active');
+                document.getElementById('player2').classList.add('active');
+                document.getElementById('message').textContent = '学生2（白棋）请下棋';
+                
+                // 禁用玩家1的输入，启用玩家2的输入
+                document.getElementById('x1').disabled = true;
+                document.getElementById('y1').disabled = true;
+                document.getElementById('submit1').disabled = true;
+                document.getElementById('x2').disabled = false;
+                document.getElementById('y2').disabled = false;
+                document.getElementById('submit2').disabled = false;
+            } else {
+                currentPlayer = 1;
+                document.getElementById('player2').classList.remove('active');
+                document.getElementById('player1').classList.add('active');
+                document.getElementById('message').textContent = '学生1（黑棋）请下棋';
+                
+                // 禁用玩家2的输入，启用玩家1的输入
+                document.getElementById('x2').disabled = true;
+                document.getElementById('y2').disabled = true;
+                document.getElementById('submit2').disabled = true;
+                document.getElementById('x1').disabled = false;
+                document.getElementById('y1').disabled = false;
+                document.getElementById('submit1').disabled = false;
+            }
+        }
+        
+        // 下棋子
+        function placePiece(x, y) {
+            // 转换坐标：因为显示的y坐标是从下到上0-9，但数组索引是从上到下0-9
+            const arrayY = 9 - y;
+            
+            // 检查位置是否有效
+            if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) {
+                document.getElementById('message').textContent = '坐标超出范围，请输入0-9之间的数字';
+                return false;
+            }
+            
+            // 检查位置是否已有棋子
+            if (board[arrayY][x] !== 0) {
+                document.getElementById('message').textContent = '该位置已有棋子，请选择其他位置';
+                return false;
+            }
+            
+            // 放置棋子
+            board[arrayY][x] = currentPlayer;
+            
+            // 创建棋子元素
+            const piece = document.createElement('div');
+            piece.className = 'piece ' + (currentPlayer === 1 ? 'black' : 'white');
+            
+            // 找到对应的交点并添加棋子
+            const intersection = document.querySelector(`.intersection[data-x="${x}"][data-y="${y}"]`);
+            intersection.appendChild(piece);
+            intersection.classList.add('has-piece');
+            
+            // 检查是否获胜
+            if (checkWin(x, arrayY)) {
+                const playerName = currentPlayer === 1 ? '学生1（黑棋）' : '学生2（白棋）';
+                document.getElementById('message').textContent = `恭喜！${playerName}获胜！`;
+                gameOver = true;
+                
+                // 禁用所有输入
+                document.getElementById('x1').disabled = true;
+                document.getElementById('y1').disabled = true;
+                document.getElementById('submit1').disabled = true;
+                document.getElementById('x2').disabled = true;
+                document.getElementById('y2').disabled = true;
+                document.getElementById('submit2').disabled = true;
+                
+                return true;
+            }
+            
+            // 检查是否平局
+            if (checkDraw()) {
+                document.getElementById('message').textContent = '平局！游戏结束';
+                gameOver = true;
+                
+                // 禁用所有输入
+                document.getElementById('x1').disabled = true;
+                document.getElementById('y1').disabled = true;
+                document.getElementById('submit1').disabled = true;
+                document.getElementById('x2').disabled = true;
+                document.getElementById('y2').disabled = true;
+                document.getElementById('submit2').disabled = true;
+                
+                return true;
+            }
+            
+            // 切换玩家
+            switchPlayer();
+            return true;
+        }
+        
+        // 检查是否获胜
+        function checkWin(x, y) {
+            const directions = [
+                [1, 0],  // 水平
+                [0, 1],  // 垂直
+                [1, 1],  // 对角线1
+                [1, -1]  // 对角线2
+            ];
+            
+            const player = board[y][x];
+            
+            for (const [dx, dy] of directions) {
+                let count = 1;  // 当前位置已经有一个棋子
+                
+                // 向正方向查找
+                for (let i = 1; i < 5; i++) {
+                    const nx = x + dx * i;
+                    const ny = y + dy * i;
+                    if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE && board[ny][nx] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // 向反方向查找
+                for (let i = 1; i < 5; i++) {
+                    const nx = x - dx * i;
+                    const ny = y - dy * i;
+                    if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE && board[ny][nx] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // 如果连成5颗或更多，获胜
+                if (count >= 5) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // 检查是否平局
+        function checkDraw() {
+            for (let y = 0; y < BOARD_SIZE; y++) {
+                for (let x = 0; x < BOARD_SIZE; x++) {
+                    if (board[y][x] === 0) {
+                        return false;  // 还有空位，不是平局
+                    }
+                }
+            }
+            return true;  // 棋盘已满，平局
+        }
+        
+        // 提交移动
+        function submitMove(player) {
+            if (gameOver) {
+                return;
+            }
+            
+            if (player !== currentPlayer) {
+                document.getElementById('message').textContent = '现在不是你的回合';
+                return;
+            }
+            
+            let x, y;
+            if (player === 1) {
+                x = parseInt(document.getElementById('x1').value);
+                y = parseInt(document.getElementById('y1').value);
+            } else {
+                x = parseInt(document.getElementById('x2').value);
+                y = parseInt(document.getElementById('y2').value);
+            }
+            
+            // 验证输入
+            if (isNaN(x) || isNaN(y)) {
+                document.getElementById('message').textContent = '请输入有效的数字坐标';
+                return;
+            }
+            
+            // 下棋子
+            placePiece(x, y);
+        }
+        
+        // 重新开始游戏
+        function restartGame() {
+            initBoard();
+            currentPlayer = 1;
+            gameOver = false;
+            
+            document.getElementById('player1').classList.add('active');
+            document.getElementById('player2').classList.remove('active');
+            document.getElementById('message').textContent = '学生1（黑棋）请下棋';
+            
+            // 启用玩家1的输入，禁用玩家2的输入
+            document.getElementById('x1').disabled = false;
+            document.getElementById('y1').disabled = false;
+            document.getElementById('submit1').disabled = false;
+            document.getElementById('x2').disabled = true;
+            document.getElementById('y2').disabled = true;
+            document.getElementById('submit2').disabled = true;
+        }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            initBoard();
+        };
+    </script>
+</body>
+</html>
