@@ -103,8 +103,8 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
+            background-color: rgba(1, 0, 0, 0.8);
+            color: rgb(11, 0, 0);
             padding: 15px 20px;
             border-radius: 8px;
             font-size: 1.2em;
@@ -520,6 +520,64 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
+        
+        /* 胜负信息显示区域样式 */
+        .game-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            max-width: 300px;
+            border: 3px solid #5e35b1;
+        }
+
+        .game-status.show {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .game-status h2 {
+            color: #5e35b1;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .game-status p {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #424242;
+        }
+        
+        /* 下一关按钮样式 */
+        .next-level-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .next-level-btn:hover {
+            background: linear-gradient(135deg, #45a049, #3d8b40);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .next-level-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
 
         /* 响应式设计 */
         @media (max-width: 900px) {
@@ -654,6 +712,18 @@
     </style>
 </head>
 <body>
+    <!-- 胜负信息显示区域 -->
+    <div id="gameStatus" class="game-status">
+        <h2 id="winnerText">胜利！</h2>
+        <p id="winnerMessage">恭喜获胜！</p>
+        <button id="playAgainBtn" class="restart-btn">再来一局</button>
+    </div>
+    
+    <!-- 下一关按钮 -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <button id="nextLevelBtn" class="next-level-btn">下一关</button>
+    </div>
+    
     <!-- 游戏状态提示 -->
     <div class="game-status" id="gameStatus">游戏进行中</div>
     
@@ -1269,6 +1339,7 @@
             // 显示结果消息
             if (winner === 'white') {
                 showGameStatus('太棒了！你赢了！', 'win');
+                showWinStatus('white'); // 显示胜负信息
                 
                 // 播放胜利音效
                 try {
@@ -1281,6 +1352,7 @@
                 }
             } else {
                 showGameStatus('电脑获胜了！再试一次吧！', 'lose');
+                showWinStatus('black'); // 显示胜负信息
                 
                 // 播放over.wav音效
                 try {
@@ -1294,6 +1366,25 @@
             }
         }
 
+        // 显示胜负信息（右上角）
+        function showWinStatus(winner) {
+            const gameStatusElement = document.getElementById('gameStatus');
+            const winnerTextElement = document.getElementById('winnerText');
+            const winnerMessageElement = document.getElementById('winnerMessage');
+            
+            // 显示获胜信息
+            if (winner === 'white') {
+                winnerTextElement.textContent = '白棋胜利！';
+                winnerMessageElement.textContent = '太棒了！你赢了！';
+            } else {
+                winnerTextElement.textContent = '黑棋胜利！';
+                winnerMessageElement.textContent = '电脑获胜了！再试一次吧！';
+            }
+            
+            // 显示胜负信息区域
+            gameStatusElement.classList.add('show');
+        }
+        
         // 重置游戏
         function resetGame() {
             // 清空棋盘
@@ -1319,10 +1410,14 @@
             whiteColInput.value = '';
             whiteRowInput.value = '';
             
-            // 隐藏弹窗和覆盖层
+            // 隐藏弹窗、覆盖层和胜负信息
             winModal.style.display = 'none';
             gameOverOverlay.style.display = 'none';
             gameStatus.classList.remove('show');
+            const gameStatusElement = document.getElementById('gameStatus');
+            if (gameStatusElement) {
+                gameStatusElement.classList.remove('show');
+            }
             
             // 预设棋盘棋子
             setupInitialGame();
@@ -1435,7 +1530,20 @@
         whiteRowInput.addEventListener('keypress', handleEnterKey);
 
         // 事件监听：重新开始
-        restartBtn.addEventListener('click', resetGame);
+            restartBtn.addEventListener('click', resetGame);
+            
+            // 事件监听：再来一局按钮
+            if (document.getElementById('playAgainBtn')) {
+                document.getElementById('playAgainBtn').addEventListener('click', resetGame);
+            }
+            
+            // 事件监听：下一关按钮
+            if (document.getElementById('nextLevelBtn')) {
+                document.getElementById('nextLevelBtn').addEventListener('click', () => {
+                    // 在同一窗口中跳转到ziyouxia5.html
+                    window.location.href = 'ziyouxia5.html';
+                });
+            }
 
         // 事件监听：窗口大小改变时重绘棋盘
         window.addEventListener('resize', () => {
