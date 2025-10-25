@@ -462,6 +462,7 @@
         
         /* 坐标显示样式 */
         .stone-coordinate {
+            position: absolute;
             font-size: 14px;
             font-weight: bold;
             color: black;
@@ -469,6 +470,9 @@
             padding: 3px 6px;
             border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 20;
             opacity: 0;
             transition: opacity 0.3s ease;
@@ -476,30 +480,16 @@
             white-space: nowrap;
         }
         
-        .coordinate-top {
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        .coordinate-left {
-            position: absolute;
-            left: -60px;
+        /* 竖五连子坐标显示在左侧 */
+        .stone-coordinate.vertical-position {
             top: 50%;
+            left: -40px;
             transform: translateY(-50%);
         }
         
         .stone-coordinate.show {
             opacity: 1;
-        }
-        
-        .coordinate-top.show {
             animation: bounce-in 0.5s ease;
-        }
-        
-        .coordinate-left.show {
-            animation: bounce-in-left 0.5s ease;
         }
         
         /* 红色坐标文本 */
@@ -518,20 +508,19 @@
         }
         
         @keyframes bounce-in {
-            0% { opacity: 0; transform: translateX(-50%) scale(0); }
-            70% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
-            100% { opacity: 1; transform: translateX(-50%) scale(1); }
+            0% { transform: translateX(-50%) scale(0); }
+            70% { transform: translateX(-50%) scale(1.1); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+        
+        /* 左侧坐标的弹跳动画 */
+        .stone-coordinate.vertical-position.show {
+            animation: bounce-in-left 0.5s ease;
         }
         
         @keyframes bounce-in-left {
-            0% { opacity: 0; transform: translateY(-50%) scale(0); }
-            70% { opacity: 0.8; transform: translateY(-50%) scale(1.1); }
-            100% { opacity: 1; transform: translateY(-50%) scale(1); }
-        }
-        
-        @keyframes bounce-in-left {
-            0% { transform: translateY(-50%) scale(0); }
-            70% { transform: translateY(-50%) scale(1.1); }
+            0% { transform: translateY(-50%) translateX(-20px) scale(0); }
+            70% { transform: translateY(-50%) translateX(5px) scale(1.1); }
             100% { transform: translateY(-50%) scale(1); }
         }
 
@@ -984,63 +973,49 @@
         function highlightWinningStones(winInfo) {
             if (!winInfo.isWin) return;
             
+            const stones = document.querySelectorAll('.stone');
             const direction = winInfo.direction;
             
             // 为每个获胜棋子添加高亮和坐标显示
-            winInfo.stones.forEach(([row, col], index) => {
-                // 注意：这里的row和col已经是用户行坐标和列坐标
+            winInfo.stones.forEach(([col, row], index) => {
+                // 转换内部行坐标为用户行坐标
+                const userRow = 10 - row;
                 
                 // 找到对应的棋子元素
-                const stone = document.querySelector(`.stone[data-row="${row}"][data-col="${col}"]`);
-                if (stone) {
-                    setTimeout(() => {
+                stones.forEach(stone => {
+                    if (parseInt(stone.dataset.col) === col && parseInt(stone.dataset.row) === userRow) {
                         // 添加高亮效果
-                        stone.classList.add('highlight');
-                        
-                        // 创建坐标显示元素
-                        const coordElement = document.createElement('div');
-                        coordElement.classList.add('stone-coordinate');
-                        
-                        // 根据连接方向设置不同的CSS类和位置
-                        if (direction === 'vertical') {
-                            // 垂直方向，坐标显示在左侧
-                            coordElement.classList.add('coordinate-left');
-                        } else {
-                            // 其他方向，坐标显示在上方
-                            coordElement.classList.add('coordinate-top');
-                        }
-                        
-                        // 根据方向设置红色显示
-                        if (direction === 'vertical') {
-                            // 同一列，列坐标红色
-                            coordElement.innerHTML = `${row},<span class="red-text">${col}</span>`;
-                        } else if (direction === 'horizontal') {
-                            // 同一行，行坐标红色
-                            coordElement.innerHTML = `<span class="red-text">${row}</span>,${col}`;
-                        } else {
-                            // 对角线方向，根据情况处理
-                            const rowDiff = Math.abs(winInfo.stones[0][0] - winInfo.stones[4][0]);
-                            const colDiff = Math.abs(winInfo.stones[0][1] - winInfo.stones[4][1]);
-                            if (rowDiff > colDiff) {
-                                coordElement.innerHTML = `<span class="red-text">${row}</span>,${col}`;
-                            } else {
-                                coordElement.innerHTML = `${row},<span class="red-text">${col}</span>`;
-                            }
-                        }
-                        
-                        // 根据棋子颜色设置坐标背景颜色和文字颜色
-                        const isBlack = stone.classList.contains('black');
-                        coordElement.style.backgroundColor = isBlack ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.95)';
-                        coordElement.style.color = isBlack ? 'black' : 'white';
-                        
-                        stone.appendChild(coordElement);
-                        
-                        // 显示坐标，应用动画
                         setTimeout(() => {
-                            coordElement.classList.add('show');
-                        }, 50);
-                    }, index * 300); // 按顺序依次显示，每个间隔300毫秒
-                }
+                            stone.classList.add('highlight');
+                            
+                            // 创建坐标显示元素
+                            const coordElement = document.createElement('div');
+                            // 当是垂直方向时，添加特殊样式类让坐标显示在左侧
+                            coordElement.className = `stone-coordinate ${direction === 'vertical' ? 'vertical-position' : ''}`;
+                            coordElement.dataset.col = col;
+                            coordElement.dataset.row = userRow;
+                            
+                            // 根据方向设置红色显示
+                            if (direction === 'vertical') {
+                                // 同一列，列坐标红色
+                                coordElement.innerHTML = `(${col}, <span class="red-text">${userRow}</span>)`;
+                            } else if (direction === 'horizontal') {
+                                // 同一行，行坐标红色
+                                coordElement.innerHTML = `(<span class="red-text">${col}</span>, ${userRow})`;
+                            } else {
+                                // 对角线，全部黑色
+                                coordElement.innerHTML = `(${col}, ${userRow})`;
+                            }
+                            
+                            stone.appendChild(coordElement);
+                            
+                            // 显示坐标
+                            setTimeout(() => {
+                                coordElement.classList.add('show');
+                            }, 100);
+                        }, index * 300); // 按顺序依次显示，每个间隔300毫秒
+                    }
+                });
             });
         }
 
