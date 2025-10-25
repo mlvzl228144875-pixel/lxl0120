@@ -400,45 +400,41 @@
             cursor: not-allowed;
         }
 
-        /* 弹窗样式 */
-        .modal {
-            display: none;
+        /* 胜负信息显示区域样式 */
+        .game-status {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: linear-gradient(to bottom, #ffffff 0%, #f5f5f5 100%);
-            padding: 40px;
-            border-radius: 15px;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             text-align: center;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-            max-width: 400px;
-            width: 90%;
+            z-index: 1000;
+            display: none;
+            max-width: 300px;
             border: 3px solid #5e35b1;
         }
 
-        .modal-content h2 {
-            color: #5e35b1;
-            margin-bottom: 20px;
-            font-size: 2em;
+        .game-status.show {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
         }
 
-        .modal-content p {
+        .game-status h2 {
+            color: #5e35b1;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .game-status p {
             font-size: 1.2em;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             color: #424242;
         }
 
         .restart-btn {
-            padding: 15px 30px;
+            padding: 10px 20px;
             font-size: 16px;
             font-weight: bold;
             background: linear-gradient(to bottom, #9575cd 0%, #7e57c2 100%);
@@ -454,6 +450,89 @@
             background: linear-gradient(to bottom, #7e57c2 0%, #673ab7 100%);
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 棋子高亮效果 */
+        .stone.highlight {
+            box-shadow: 0 0 20px 5px rgba(255, 215, 0, 0.8), 0 0 10px 2px rgba(255, 215, 0, 0.6) inset;
+            animation: pulse-glow 1s infinite alternate;
+            transform: translate(-50%, -50%) scale(1.2);
+            z-index: 10;
+        }
+        
+        /* 坐标显示样式 */
+        .stone-coordinate {
+            font-size: 14px;
+            font-weight: bold;
+            color: black;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 3px 6px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .coordinate-top {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .coordinate-left {
+            position: absolute;
+            left: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .stone-coordinate.show {
+            opacity: 1;
+        }
+        
+        .coordinate-top.show {
+            animation: bounce-in 0.5s ease;
+        }
+        
+        .coordinate-left.show {
+            animation: bounce-in-left 0.5s ease;
+        }
+        
+        /* 红色坐标文本 */
+        .stone-coordinate .red-text {
+            color: red;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 15px 3px rgba(255, 215, 0, 0.6), 0 0 8px 1px rgba(255, 215, 0, 0.4) inset; }
+            100% { box-shadow: 0 0 25px 7px rgba(255, 215, 0, 0.9), 0 0 12px 3px rgba(255, 215, 0, 0.7) inset; }
+        }
+        
+        @keyframes bounce-in {
+            0% { opacity: 0; transform: translateX(-50%) scale(0); }
+            70% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        }
+        
+        @keyframes bounce-in-left {
+            0% { opacity: 0; transform: translateY(-50%) scale(0); }
+            70% { opacity: 0.8; transform: translateY(-50%) scale(1.1); }
+            100% { opacity: 1; transform: translateY(-50%) scale(1); }
+        }
+        
+        @keyframes bounce-in-left {
+            0% { transform: translateY(-50%) scale(0); }
+            70% { transform: translateY(-50%) scale(1.1); }
+            100% { transform: translateY(-50%) scale(1); }
         }
 
         /* 响应式设计 */
@@ -630,13 +709,11 @@
         </div>
     </div>
 
-    <!-- 胜利弹窗 -->
-    <div class="modal" id="winModal">
-        <div class="modal-content">
-            <h2>🎉 恭喜获胜！</h2>
-            <p id="winnerMessage">黑棋获胜！</p>
-            <button class="restart-btn" id="restartBtn">重新开始</button>
-        </div>
+    <!-- 游戏状态显示区域 -->
+    <div class="game-status" id="gameStatus">
+        <h2 id="statusTitle">🎉 游戏结束！</h2>
+        <p id="winnerMessage">黑棋获胜！</p>
+        <button class="restart-btn" id="restartBtn">重新开始</button>
     </div>
 
     <script>
@@ -651,11 +728,13 @@
         const blackRowInput = document.getElementById('blackRow');
         const whiteColInput = document.getElementById('whiteCol');
         const whiteRowInput = document.getElementById('whiteRow');
-        const winModal = document.getElementById('winModal');
+        const gameStatus = document.getElementById('gameStatus');
+        const statusTitle = document.getElementById('statusTitle');
         const winnerMessage = document.getElementById('winnerMessage');
         const restartBtn = document.getElementById('restartBtn');
         const blackNotification = document.getElementById('blackNotification');
         const whiteNotification = document.getElementById('whiteNotification');
+        let gameOver = false;
         
         // 创建音频对象
         const stoneAudio = new Audio('lz.mp3'); // 落子音效
@@ -840,7 +919,7 @@
             }
         }
         
-        // 检查是否获胜
+        // 检查是否获胜，并返回获胜信息
         function checkWin(col, row, color) {
             // 检查方向：水平、垂直、对角线1、对角线2
             const directions = [
@@ -849,9 +928,12 @@
                 [1, 1],   // 对角线1
                 [1, -1]   // 对角线2
             ];
+            const directionNames = ['horizontal', 'vertical', 'diagonal1', 'diagonal2'];
             
-            for (const [dx, dy] of directions) {
+            for (let dirIndex = 0; dirIndex < directions.length; dirIndex++) {
+                const [dx, dy] = directions[dirIndex];
                 let count = 1; // 当前棋子算1个
+                let winningStones = [[col, row]];
                 
                 // 正向检查
                 for (let i = 1; i < 5; i++) {
@@ -863,6 +945,7 @@
                         break;
                     }
                     count++;
+                    winningStones.push([newCol, newRow]);
                 }
                 
                 // 反向检查
@@ -875,23 +958,106 @@
                         break;
                     }
                     count++;
+                    winningStones.unshift([newCol, newRow]);
                 }
                 
                 if (count >= 5) {
-                    return true;
+                    // 截取连续的5个棋子
+                    if (winningStones.length > 5) {
+                        // 如果超过5个，保留中间的5个
+                        const startIndex = Math.floor((winningStones.length - 5) / 2);
+                        winningStones = winningStones.slice(startIndex, startIndex + 5);
+                    }
+                    return {
+                        isWin: true,
+                        stones: winningStones,
+                        direction: directionNames[dirIndex],
+                        color: color
+                    };
                 }
             }
             
-            return false;
+            return { isWin: false };
+        }
+        
+        // 高亮显示获胜的棋子并动态显示坐标
+        function highlightWinningStones(winInfo) {
+            if (!winInfo.isWin) return;
+            
+            const direction = winInfo.direction;
+            
+            // 为每个获胜棋子添加高亮和坐标显示
+            winInfo.stones.forEach(([row, col], index) => {
+                // 注意：这里的row和col已经是用户行坐标和列坐标
+                
+                // 找到对应的棋子元素
+                const stone = document.querySelector(`.stone[data-row="${row}"][data-col="${col}"]`);
+                if (stone) {
+                    setTimeout(() => {
+                        // 添加高亮效果
+                        stone.classList.add('highlight');
+                        
+                        // 创建坐标显示元素
+                        const coordElement = document.createElement('div');
+                        coordElement.classList.add('stone-coordinate');
+                        
+                        // 根据连接方向设置不同的CSS类和位置
+                        if (direction === 'vertical') {
+                            // 垂直方向，坐标显示在左侧
+                            coordElement.classList.add('coordinate-left');
+                        } else {
+                            // 其他方向，坐标显示在上方
+                            coordElement.classList.add('coordinate-top');
+                        }
+                        
+                        // 根据方向设置红色显示
+                        if (direction === 'vertical') {
+                            // 同一列，列坐标红色
+                            coordElement.innerHTML = `${row},<span class="red-text">${col}</span>`;
+                        } else if (direction === 'horizontal') {
+                            // 同一行，行坐标红色
+                            coordElement.innerHTML = `<span class="red-text">${row}</span>,${col}`;
+                        } else {
+                            // 对角线方向，根据情况处理
+                            const rowDiff = Math.abs(winInfo.stones[0][0] - winInfo.stones[4][0]);
+                            const colDiff = Math.abs(winInfo.stones[0][1] - winInfo.stones[4][1]);
+                            if (rowDiff > colDiff) {
+                                coordElement.innerHTML = `<span class="red-text">${row}</span>,${col}`;
+                            } else {
+                                coordElement.innerHTML = `${row},<span class="red-text">${col}</span>`;
+                            }
+                        }
+                        
+                        // 根据棋子颜色设置坐标背景颜色和文字颜色
+                        const isBlack = stone.classList.contains('black');
+                        coordElement.style.backgroundColor = isBlack ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.95)';
+                        coordElement.style.color = isBlack ? 'black' : 'white';
+                        
+                        stone.appendChild(coordElement);
+                        
+                        // 显示坐标，应用动画
+                        setTimeout(() => {
+                            coordElement.classList.add('show');
+                        }, 50);
+                    }, index * 300); // 按顺序依次显示，每个间隔300毫秒
+                }
+            });
         }
 
-        // 显示胜利弹窗
-        function showWinModal(winner) {
+        // 显示游戏状态
+        function showGameStatus(winner) {
+            // 设置游戏结束标志
+            gameOver = true;
+            
             // 显示获胜信息
             winnerMessage.textContent = `${winner === 'black' ? '黑棋' : '白棋'}获胜！`;
             
-            // 添加获胜动画效果
-            winModal.style.display = 'flex';
+            // 在右上角显示状态
+            gameStatus.classList.add('show');
+            
+            // 禁用所有按钮
+            placeBlackBtn.disabled = true;
+            placeWhiteBtn.disabled = true;
             
             // 播放胜利音效
             try {
@@ -913,6 +1079,7 @@
             // 重置游戏状态
             gameBoard = Array(12).fill().map(() => Array(11).fill(null)); // 12x11 数组，索引 0-10 有效
             currentPlayer = 'black';
+            gameOver = false;
             
             // 更新界面
             placeBlackBtn.disabled = false;
@@ -924,8 +1091,8 @@
             whiteColInput.value = '';
             whiteRowInput.value = '';
             
-            // 隐藏弹窗
-            winModal.style.display = 'none';
+            // 隐藏游戏状态
+            gameStatus.classList.remove('show');
             
             // 显示重置成功提示和回合提示
             showNotification('游戏已重置，让我们再来一局吧！', 'success', 'black');
@@ -935,6 +1102,12 @@
 
         // 处理放置棋子的通用函数
         function placeStoneForPlayer(player) {
+            // 如果游戏已结束，不处理新的落子
+            if (gameOver) {
+                showNotification('游戏已结束，请重新开始！', 'error', player);
+                return;
+            }
+            
             const colInput = player === 'black' ? blackColInput : whiteColInput;
             const rowInput = player === 'black' ? blackRowInput : whiteRowInput;
             
@@ -954,8 +1127,14 @@
             
             if (placeStone(col, row, player)) {
                 // 检查是否获胜
-                if (checkWin(col, 10 - row, player)) {
-                    showWinModal(player);
+                const winInfo = checkWin(col, 10 - row, player);
+                if (winInfo.isWin) {
+                    // 高亮显示获胜棋子并显示坐标
+                    highlightWinningStones(winInfo);
+                    // 在右上角显示获胜信息
+                    setTimeout(() => {
+                        showGameStatus(player);
+                    }, 1500); // 等待坐标显示动画完成后再显示状态
                     return;
                 }
                 
@@ -968,10 +1147,12 @@
         function handleEnterKey(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                if (currentPlayer === 'black') {
-                    placeStoneForPlayer('black');
-                } else {
-                    placeStoneForPlayer('white');
+                if (!gameOver) {
+                    if (currentPlayer === 'black') {
+                        placeStoneForPlayer('black');
+                    } else {
+                        placeStoneForPlayer('white');
+                    }
                 }
             }
         }
